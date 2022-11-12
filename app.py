@@ -3,10 +3,23 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flask import url_for
+from flask_httpauth import HTTPBasicAuth
 
 
 app = Flask(__name__)
 
+
+#Authentication system
+auth = HTTPBasicAuth()
+
+@auth.get_password
+def get_password(username):
+	if username == 'Antoh':
+		return 'kip'
+
+@auth.error_handler
+def unauthorized():
+	return make_response(jsonify({'error':'Unauthorized Access'}), 403)
 
 #dummy database
 tasks = [
@@ -24,7 +37,9 @@ tasks = [
 
 
 #api to get specific task by id
+#(curl command )curl -i http://localhost:5000/todo/api/v1/tasks/2
 @app.route('/todo/api/v1/tasks/<int:task_id>', methods=['GET'])
+@auth.login_required
 def get_task(task_id):
     task = []
     for tk in tasks:
@@ -38,6 +53,7 @@ def get_task(task_id):
 
 #api endpoint to create a task
 @app.route('/todo/api/v1/tasks', methods=['POST'])
+@auth.login_required
 def create_task():
     #(curl command to test) curl -i -H "Content-Type: application/json" -X POST -d "{\"title\":\"Read a book\"}" http://localhost:5000/todo/api/v1/tasks
     
@@ -57,6 +73,7 @@ def create_task():
 #api endpoint to update an existing task or create new one
 @app.route('/todo/api/v1/tasks/<int:task_id>', methods=['PUT'])
 #(curl test command)curl -i -H "Content-Type: application/json" -X PUT -d "{\"Done\":true, \"title\":\"Uhuru si mubaya\"}" http://localhost:5000/todo/api/v1/tasks/1
+@auth.login_required
 def update_task(task_id):
 	task = []
 	for tk in tasks:
@@ -81,6 +98,7 @@ def update_task(task_id):
 #api endpoint to delete a task by id
 @app.route('/todo/api/v1/tasks/<int:task_id>', methods=['DELETE'])
 #(curl test command) curl -i -H "Content-Type: application/json" -X DELETE http://localhost:5000/todo/api/v1/tasks/2
+@auth.login_required
 def delete_task(task_id):
 	task = []
 	for tk in tasks:
@@ -100,6 +118,8 @@ def not_found(error):
 
 #api endpoint to get tasks avilable in db
 @app.route('/todo/api/v1/tasks', methods=['GET'])
+#(curl command )curl -i http://localhost:5000/todo/api/v1/tasks
+@auth.login_required
 def get_tasks():
 	public_tasks = []
 	for task in tasks:
