@@ -1,4 +1,4 @@
-#Todo List Api
+Todo List Api
 ----
 
 This is a RESTful API compliant design. It enables one to do CRUDE operations
@@ -13,3 +13,5 @@ Getting started
 2. activate myenv and Install Flask > pip install flask
 3. Run the application > python app.py
 4. Start your cmd or powershel to run Curl commands
+
+Learning resource credits : <a href="https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask">Miguel Grinberg</a>
