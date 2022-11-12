@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
 from flask import request
+from flask import url_for
 
 
 app = Flask(__name__)
@@ -21,6 +22,8 @@ tasks = [
      }
     ]
 
+
+#api to get specific task by id
 @app.route('/todo/api/v1/tasks/<int:task_id>', methods=['GET'])
 def get_task(task_id):
     task = []
@@ -29,7 +32,9 @@ def get_task(task_id):
             task.append(tk)        
     if len(task)==0:
         abort(404)
-    return jsonify({'task': task[0]})
+    return jsonify({'task': make_task_public(task[0])})
+
+
 
 #api endpoint to create a task
 @app.route('/todo/api/v1/tasks', methods=['POST'])
@@ -46,7 +51,7 @@ def create_task():
         'Done':False
         }
     tasks.append(task)
-    return jsonify({'task':task}), 201 #status code for created
+    return jsonify({'task':make_task_public(task)}), 201 #status code for created
 
 
 #api endpoint to update an existing task or create new one
@@ -70,7 +75,7 @@ def update_task(task_id):
 	task[0]['title'] = request.json.get('title', task[0]['title'])
 	task[0]['Description'] = request.json.get('Description', task[0]['Description'])
 	task[0]['Done'] = request.json.get('Done', task[0]['Done'])
-	return jsonify({'task':task[0]}), 202	
+	return jsonify({'task':make_task_public(task[0])}), 202	
 
 
 #api endpoint to delete a task by id
@@ -86,15 +91,31 @@ def delete_task(task_id):
 	tasks.remove(task[0])
 	return jsonify({'Result':'Deletion Successful'})
 
+
 #to ensure the error returned is not html data but json data
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error':'Not found'}),404)
 
+
 #api endpoint to get tasks avilable in db
 @app.route('/todo/api/v1/tasks', methods=['GET'])
 def get_tasks():
-    return jsonify({'tasks':tasks})
+	public_tasks = []
+	for task in tasks:
+		new_t = make_task_public(task)
+		public_tasks.append(new_t)
+	return jsonify({'tasks':public_tasks})
+
+#helper function to generate public version(shows URI that controls the task) of task to send to client
+def make_task_public(task):
+	new_task = {}
+	for field in task:
+		if field=='id':
+			new_task['uri'] = url_for('get_task', task_id=task['id'], _external=True)
+		else:
+			new_task[field] = task[field]
+	return new_task
 
 
 #entry point to our script
